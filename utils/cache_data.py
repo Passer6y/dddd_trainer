@@ -9,7 +9,7 @@ from loguru import logger
 
 
 class CacheData:
-    def __init__(self, project_name: str):
+    def __init__(self, project_name: str, update_charset: bool = True):
         self.project_name = project_name
         self.project_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "projects",
                                          project_name)
@@ -22,8 +22,9 @@ class CacheData:
         self.conf = self.config.load_config()
         self.bath_path = self.conf['System']['Path']
         self.allow_ext = []
+        self.update_charset = update_charset    # 避免增量训练时，动态修改的CharSet无法适配当前模型
 
-    def cache(self, base_path: str, search_type="name"):
+    def cache(self, base_path: str, search_type="name", fix_charset: bool = False):
         self.bath_path = base_path
         self.allow_ext = self.conf["System"]["Allow_Ext"]
         if search_type == "name":
@@ -89,9 +90,12 @@ class CacheData:
         labels = list(set(labels))
         if not self.conf['Model']['Word']:
             labels.insert(0, " ")
-        logger.info("\nCoolect labels is {}".format(json.dumps(labels, ensure_ascii=False)))
         self.conf['System']['Path'] = base_path
-        self.conf['Model']['CharSet'] = labels
+        if self.update_charset:
+            self.conf['Model']['CharSet'] = labels
+            logger.info("\nCoolect labels is {}".format(json.dumps(labels, ensure_ascii=False)))
+        else:
+            logger.info("\nUse previous labels: {}".format(json.dumps(self.conf['Model']['CharSet'], ensure_ascii=False)))
         self.config.make_config(config_dict=self.conf, single=self.conf['Model']['Word'])
         logger.info("\nWriting Cache Data!")
         del lines

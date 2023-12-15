@@ -153,12 +153,16 @@ Train:
 
 - ### 6、缓存数据
 
-`python app.py cache {project_name} /root/images_set/`
+`python app.py cache {project_name} /root/images_set/ name`
 
 如果是从labels.txt里面读取数据
 
 `python app.py cache {project_name} /root/images_set/ file`
 
+如果想要不动态修改CharSet配置(用于增量训练时)
+`python app.py cache {project_name} /root/images_set/ file False`
+
+> simple-captcha项目中的Charset是处理的数学运算+字母验证码，增量训练时不需要动态修改
 - ### 7、开始训练或恢复训练
 
 `python app.py train {project_name}`

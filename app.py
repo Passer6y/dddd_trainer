@@ -16,9 +16,9 @@ class App:
         pm = project_manager.ProjectManager()
         pm.create_project(project_name, single)
 
-    def cache(self, project_name: str, base_path: str, search_type: str = "name"):
+    def cache(self, project_name: str, base_path: str, search_type: str = "name", update_charset: bool = True):
         logger.info("\nCaching Data ----> {}\nPath ----> {}".format(project_name, base_path))
-        cache = cache_data.CacheData(project_name)
+        cache = cache_data.CacheData(project_name, update_charset)
         cache.cache(base_path, search_type)
         pass
 
@@ -26,7 +26,6 @@ class App:
         logger.info("\nStart Train ----> {}\n".format(project_name))
         trainer = train.Train(project_name)
         trainer.start()
-
 
 
 if __name__ == '__main__':
