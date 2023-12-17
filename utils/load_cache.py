@@ -36,9 +36,9 @@ class LoadCache(Dataset):
         try:
             data = self.caches[idx]
             data = data.replace("\r", "").replace("\n", "").split("\t")
-            image_name = data[0]
+            image_path = data[0]
             image_label = data[1]
-            image_path = os.path.join(self.path, image_name)
+            # image_path = os.path.join(self.path, image_name)
             if not self.word:
                 image_label = list(image_label)
             else:

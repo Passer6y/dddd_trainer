@@ -22,7 +22,7 @@ class CacheData:
         self.conf = self.config.load_config()
         self.bath_path = self.conf['System']['Path']
         self.allow_ext = []
-        self.update_charset = update_charset    # 避免增量训练时，动态修改的CharSet无法适配当前模型
+        self.update_charset = update_charset  # 避免增量训练时，动态修改的CharSet无法适配当前模型
 
     def cache(self, base_path: str, search_type="name", fix_charset: bool = False):
         self.bath_path = base_path
@@ -78,7 +78,9 @@ class CacheData:
                 if " " in filename:
                     logger.warning("The {} has black. We will remove it!".format(filename))
                     continue
-                caches.append('\t'.join([filename, label]))
+                cache_data = '\t'.join([f"{base_path}/{filename}", label])
+                if cache_data not in caches:
+                    caches.append(cache_data)
                 if not self.conf['Model']['Word']:
                     label = list(label)
                     labels.extend(label)
@@ -95,7 +97,8 @@ class CacheData:
             self.conf['Model']['CharSet'] = labels
             logger.info("\nCoolect labels is {}".format(json.dumps(labels, ensure_ascii=False)))
         else:
-            logger.info("\nUse previous labels: {}".format(json.dumps(self.conf['Model']['CharSet'], ensure_ascii=False)))
+            logger.info(
+                "\nUse previous labels: {}".format(json.dumps(self.conf['Model']['CharSet'], ensure_ascii=False)))
         self.config.make_config(config_dict=self.conf, single=self.conf['Model']['Word'])
         logger.info("\nWriting Cache Data!")
         del lines
@@ -109,13 +112,42 @@ class CacheData:
         else:
             logger.error("val setting vaild!")
             exit()
+        # 读取之前的样本集，一起打乱
+        old_train_set = []
+        old_verify_set = []
+        train_path = os.path.join(self.cache_path, "cache.train.tmp")
+        verify_path = os.path.join(self.cache_path, "cache.val.tmp")
+        if os.path.exists(train_path) and os.path.exists(verify_path):
+            old_train_set = open(train_path).read().splitlines()
+            old_verify_set = open(verify_path).read().splitlines()
+
         random.shuffle(caches)
         train_set = caches[val_num:]
         val_set = caches[:val_num]
         del caches
-        with open(os.path.join(self.cache_path, "cache.train.tmp"), 'w', encoding="utf-8") as f:
+        new_train_num = len(train_set)
+        new_val_num = len(val_set)
+
+        train_set.extend(old_train_set)
+        val_set.extend(old_verify_set)
+
+        train_set = list(set(train_set))
+        val_set = list(set(val_set))
+
+        random.shuffle(train_set)
+        random.shuffle(val_set)
+
+        if len(old_train_set) != 0 and len(old_verify_set) != 0:
+            logger.info(f"\nNew Train Data Number is {new_train_num}, total: {len(train_set)}")
+            logger.info(f"\nNew Val Data Number is {new_val_num}, total: {len(val_set)}")
+        else:
+            logger.info("\nTrain Data Number is {}".format(len(train_set)))
+            logger.info("\nVal Data Number is {}".format(len(val_set)))
+
+        train_path = os.path.join(self.cache_path, "cache.train.tmp")
+        verify_path = os.path.join(self.cache_path, "cache.val.tmp")
+
+        with open(train_path, 'a+', encoding="utf-8") as f:
             f.write("\n".join(train_set))
-        with open(os.path.join(self.cache_path, "cache.val.tmp"), 'w', encoding="utf-8") as f:
+        with open(verify_path, 'a+', encoding="utf-8") as f:
             f.write("\n".join(val_set))
-        logger.info("\nTrain Data Number is {}".format(len(train_set)))
-        logger.info("\nVal Data Number is {}".format(len(val_set)))
