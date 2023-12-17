@@ -118,8 +118,8 @@ class CacheData:
         train_path = os.path.join(self.cache_path, "cache.train.tmp")
         verify_path = os.path.join(self.cache_path, "cache.val.tmp")
         if os.path.exists(train_path) and os.path.exists(verify_path):
-            old_train_set = open(train_path).read().splitlines()
-            old_verify_set = open(verify_path).read().splitlines()
+            old_train_set = open(train_path).read().split("\n")
+            old_verify_set = open(verify_path).read().split("\n")
 
         random.shuffle(caches)
         train_set = caches[val_num:]
@@ -147,7 +147,7 @@ class CacheData:
         train_path = os.path.join(self.cache_path, "cache.train.tmp")
         verify_path = os.path.join(self.cache_path, "cache.val.tmp")
 
-        with open(train_path, 'a+', encoding="utf-8") as f:
+        with open(train_path, 'w', encoding="utf-8") as f:
             f.write("\n".join(train_set))
-        with open(verify_path, 'a+', encoding="utf-8") as f:
+        with open(verify_path, 'w', encoding="utf-8") as f:
             f.write("\n".join(val_set))
